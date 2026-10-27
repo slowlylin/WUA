@@ -90,13 +90,15 @@ body {
 }
 .nav-btn:hover { color: var(--ink); }
 .nav-btn.active { color: var(--red); border-bottom-color: var(--red); font-weight: 500; }
+.nav-ext-link { font-size: 11px; letter-spacing: 0.08em; color: var(--ink-light); text-decoration: none; white-space: nowrap; padding: 0.7rem 0 0.7rem 1.2rem; border-left: 0.5px solid var(--border); margin-left: auto; transition: color .15s; }
+.nav-ext-link:hover { color: var(--red); }
 
 /* ── MAIN ── */
 .main { max-width: 960px; margin: 0 auto; padding: 2rem; }
 
 /* ── CATEGORY FOLDERS ── */
 .folder-grid {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;
   margin-bottom: 2rem;
 }
 .folder-card {
@@ -221,7 +223,7 @@ body {
   <div class="header-inner">
     <div class="header-left">
       <div class="header-agency">WORLDVIEW UPDATE ADMINISTRATION　世界觀更新管理局　WUA</div>
-      <div class="header-title">人類行為基準線資料庫</div>
+      <div class="header-title">人類行為基準線資料庫　·　<a href="https://wua.netlify.app/bowen/" target="_blank" style="font-size:22px;font-weight:700;color:var(--ink);text-decoration:none;">博聞館</a></div>
       <div class="header-en">Human Baseline Archive — 用於記錄足以導致觀測員重新校正基準線之事件</div>
     </div>
     <div class="header-seal">世界觀<br>更新<br>管理局<br>WUA</div>
