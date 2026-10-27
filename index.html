@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>世界觀更新管理局　Human Baseline Archive</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="wua-cases.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --cream: #f5f0e8;
+  --cream-dark: #ede8e0;
+  --cream-darker: #e0d8cc;
+  --border: #c8b89a;
+  --red: #b32e2e;
+  --ink: #2a2218;
+  --ink-mid: #555;
+  --ink-light: #888;
+  --ink-faint: #aaa;
+  --gold: #8a6e3a;
+}
+
+body {
+  font-family: 'Noto Serif TC', serif;
+  background: #e8e0d0;
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+/* ── HEADER ── */
+.site-header {
+  background: var(--cream);
+  border-bottom: 2px solid var(--red);
+  padding: 1.5rem 2rem 1.2rem;
+}
+.header-inner {
+  max-width: 960px; margin: 0 auto;
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+}
+.header-left {}
+.header-agency { font-size: 10px; letter-spacing: 0.15em; color: var(--ink-light); margin-bottom: 4px; }
+.header-title { font-size: 22px; font-weight: 700; color: var(--ink); line-height: 1.2; }
+.header-en { font-size: 11px; letter-spacing: 0.1em; color: var(--ink-light); margin-top: 3px; }
+.header-seal {
+  width: 72px; height: 72px; flex-shrink: 0;
+  border: 3px solid var(--red); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  text-align: center; color: var(--red);
+  font-size: 9px; font-weight: 700; line-height: 1.4; letter-spacing: 0.03em;
+  padding: 6px;
+}
+.header-meta {
+  max-width: 960px; margin: 1rem auto 0;
+  padding-top: 1rem; border-top: 0.5px solid var(--border);
+  display: flex; gap: 2rem; flex-wrap: wrap; font-size: 12px;
+}
+.meta-item { display: flex; gap: 8px; }
+.meta-label { color: var(--ink-light); }
+.meta-val { color: var(--ink); font-weight: 500; }
+.changelog {
+  max-width: 960px; margin: 0.75rem auto 0;
+  background: var(--cream-dark);
+  border-radius: 4px; padding: 0.5rem 0.75rem;
+  font-family: monospace; font-size: 11px; color: var(--ink-mid); line-height: 1.9;
+}
+.cl-rm { color: var(--red); }
+.cl-add { color: #2a6e3f; }
+
+/* ── NAV ── */
+.site-nav {
+  background: var(--cream-dark);
+  border-bottom: 0.5px solid var(--border);
+  padding: 0 2rem;
+  position: sticky; top: 0; z-index: 100;
+}
+.nav-inner {
+  max-width: 960px; margin: 0 auto;
+  display: flex; gap: 0; overflow-x: auto;
+}
+.nav-btn {
+  padding: 0.7rem 1.1rem;
+  font-family: 'Noto Serif TC', serif;
+  font-size: 12px; color: var(--ink-light);
+  background: none; border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer; white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+}
+.nav-btn:hover { color: var(--ink); }
+.nav-btn.active { color: var(--red); border-bottom-color: var(--red); font-weight: 500; }
+
+/* ── MAIN ── */
+.main { max-width: 960px; margin: 0 auto; padding: 2rem; }
+
+/* ── CATEGORY FOLDERS ── */
+.folder-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px;
+  margin-bottom: 2rem;
+}
+.folder-card {
+  background: var(--cream);
+  border: 0.5px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.folder-card:hover { background: var(--cream-dark); border-color: var(--red); }
+.folder-card.active { background: var(--cream-dark); border-color: var(--red); border-width: 1.5px; }
+.folder-icon { font-size: 20px; margin-bottom: 6px; }
+.folder-name { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 3px; }
+.folder-desc { font-size: 11px; color: var(--ink-light); line-height: 1.5; }
+.folder-count {
+  display: inline-block; margin-top: 8px;
+  font-size: 10px; background: var(--cream-dark);
+  border: 0.5px solid var(--border); border-radius: 10px;
+  padding: 1px 8px; color: var(--ink-light);
+}
+
+/* ── CASE LIST ── */
+.section-label {
+  font-size: 10px; letter-spacing: 0.15em; color: var(--red); font-weight: 700;
+  margin-bottom: 1rem; padding-bottom: 6px;
+  border-bottom: 0.5px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.case-count { font-size: 11px; color: var(--ink-light); letter-spacing: 0; font-weight: 400; }
+
+.cases-list { display: flex; flex-direction: column; gap: 1.25rem; }
+
+/* ── CASE CARD ── */
+.case-card {
+  background: #fdfaf5;
+  border: 0.5px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.case-card-header {
+  background: var(--cream-dark);
+  border-bottom: 0.5px solid var(--border);
+  padding: 0.75rem 1.25rem;
+  display: flex; align-items: baseline; gap: 0.75rem; flex-wrap: wrap;
+}
+.case-id { font-family: monospace; font-size: 11px; color: var(--ink-light); letter-spacing: 0.08em; }
+.case-name { font-size: 16px; font-weight: 700; color: var(--ink); flex: 1; }
+.case-tag { font-size: 10px; padding: 2px 10px; border-radius: 20px; font-weight: 500; white-space: nowrap; }
+.tag-modeled { background: #fde8c0; color: #8a4e00; border: 0.5px solid #d4a040; }
+.tag-archived { background: #e0ede0; color: #2a5e2a; border: 0.5px solid #5c9a5c; }
+.tag-ongoing { background: #fce8e8; color: #8a2020; border: 0.5px solid #c84040; }
+.cat-badges { display: flex; gap: 4px; flex-wrap: wrap; }
+.cat-badge {
+  font-size: 10px; padding: 1px 7px; border-radius: 10px;
+  background: #f0ebe0; color: var(--ink-light); border: 0.5px solid var(--border);
+}
+
+.case-body { padding: 1rem 1.25rem; }
+.field-row { display: grid; grid-template-columns: 90px 1fr; gap: 4px 12px; margin-bottom: 0.65rem; align-items: start; }
+.field-label { font-size: 11px; color: var(--ink-light); padding-top: 2px; }
+.field-val { font-size: 13px; color: var(--ink); line-height: 1.7; white-space: pre-wrap; }
+.field-val.mono { font-family: monospace; }
+
+.model-box {
+  background: var(--cream-dark); border: 0.5px solid var(--border);
+  border-radius: 4px; padding: 0.6rem 0.8rem;
+  font-size: 12px; line-height: 1.8; white-space: pre-wrap; color: var(--ink-mid);
+}
+.model-views { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.model-view-title { font-size: 10px; letter-spacing: 0.08em; color: var(--red); font-weight: 700; margin-bottom: 4px; }
+
+.impact-row { display: flex; gap: 2rem; flex-wrap: wrap; }
+.impact-item { }
+.impact-label { font-size: 10px; color: var(--ink-light); margin-bottom: 2px; letter-spacing: 0.05em; }
+.stars { display: flex; gap: 1px; }
+.star-on { color: var(--red); font-size: 13px; }
+.star-off { color: #ddd; font-size: 13px; }
+.star-skull { font-size: 13px; }
+.diff-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--cream-darker); margin-right: 2px; }
+.diff-dot.on { background: var(--ink); }
+
+.case-img { max-width: 100%; border-radius: 4px; margin-top: 6px; display: block; border: 0.5px solid var(--border); }
+
+/* ── BASELINE BLOCK ── */
+.baseline-block {
+  background: #f0e8dc;
+  border-top: 2px solid var(--red);
+  padding: 1rem 1.25rem;
+}
+.baseline-title { font-size: 10px; letter-spacing: 0.12em; color: var(--red); font-weight: 700; margin-bottom: 0.75rem; }
+.baseline-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 0.75rem; }
+@media(max-width: 500px) { .baseline-grid { grid-template-columns: 1fr; } }
+.baseline-cell { font-size: 12px; line-height: 1.7; }
+.baseline-cell-label { font-size: 10px; color: var(--ink-light); margin-bottom: 2px; letter-spacing: 0.05em; }
+.baseline-cell-val { color: var(--ink); }
+.baseline-footer {
+  display: flex; gap: 2rem; flex-wrap: wrap;
+  padding-top: 0.5rem; border-top: 0.5px solid var(--border); font-size: 12px;
+}
+.delta { color: var(--red); font-weight: 700; }
+.sequel { color: var(--ink-mid); font-style: italic; }
+
+/* ── COLLAPSE ── */
+.case-card .case-body, .case-card .baseline-block { display: block; }
+.case-card.collapsed .case-body,
+.case-card.collapsed .baseline-block { display: none; }
+.case-card-header { cursor: pointer; user-select: none; }
+.collapse-arrow {
+  font-size: 12px; color: var(--ink-light); margin-left: auto;
+  transition: transform 0.2s;
+}
+.case-card.collapsed .collapse-arrow { transform: rotate(-90deg); }
+
+/* ── EMPTY STATE ── */
+.empty { text-align: center; padding: 3rem; color: var(--ink-faint); font-size: 13px; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-left">
+      <div class="header-agency">WORLDVIEW UPDATE ADMINISTRATION　世界觀更新管理局　WUA</div>
+      <div class="header-title">人類行為基準線資料庫</div>
+      <div class="header-en">Human Baseline Archive — 用於記錄足以導致觀測員重新校正基準線之事件</div>
+    </div>
+    <div class="header-seal">世界觀<br>更新<br>管理局<br>WUA</div>
+  </div>
+  <div class="header-meta" id="header-meta"></div>
+  <div class="changelog" id="header-changelog"></div>
+</header>
+
+<nav class="site-nav">
+  <div class="nav-inner" id="nav-inner"></div>
+</nav>
+
+<main class="main">
+  <div class="folder-grid" id="folder-grid"></div>
+  <div class="section-label">
+    <span id="section-title">全部案例</span>
+    <span class="case-count" id="case-count"></span>
+  </div>
+  <div class="cases-list" id="cases-list"></div>
+</main>
+
+<script>
+// ── helpers ──
+function starsHTML(n, max, useSkull) {
+  if (!n) return '<span style="color:#ddd;font-size:12px;">—</span>';
+  let h = '<div class="stars">';
+  const cap = Math.min(n, 10);
+  for (let i = 1; i <= Math.min(max || 5, 10); i++) {
+    if (i <= cap) {
+      h += useSkull && n > 5 ? '<span class="star-skull">💀</span>' : '<span class="star-on">★</span>';
+    } else {
+      h += '<span class="star-off">★</span>';
+    }
+  }
+  if (n > (max || 5)) h += `<span style="font-size:11px;color:var(--red);margin-left:3px;">×${n}</span>`;
+  h += '</div>';
+  return h;
+}
+
+function diffHTML(n) {
+  let h = '<div class="stars">';
+  for (let i = 1; i <= 5; i++) {
+    h += `<span class="diff-dot${i <= n ? ' on' : ''}"></span>`;
+  }
+  h += '</div>';
+  return h;
+}
+
+function tagHTML(tag) {
+  const map = { modeled: ['tag-modeled','建模成功'], archived: ['tag-archived','歸檔'], ongoing: ['tag-ongoing','持續監測中'] };
+  const [cls, label] = map[tag] || map.modeled;
+  return `<span class="case-tag ${cls}">${label}</span>`;
+}
+
+function catBadgesHTML(cats) {
+  return cats.map(c => {
+    const cat = WUA_CATEGORIES[c];
+    return cat ? `<span class="cat-badge">${cat.icon} ${cat.label}</span>` : '';
+  }).join('');
+}
+
+function fieldRow(label, valHTML) {
+  return `<div class="field-row"><span class="field-label">${label}</span><div class="field-val">${valHTML}</div></div>`;
+}
+
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+
+// ── render header ──
+function renderHeader() {
+  const m = WUA_META;
+  document.getElementById('header-meta').innerHTML = `
+    <div class="meta-item"><span class="meta-label">目前基準線版本</span><span class="meta-val">${m.version}</span></div>
+    <div class="meta-item"><span class="meta-label">最後更新事件</span><span class="meta-val">${m.last_updated}</span></div>
+    <div class="meta-item"><span class="meta-label">局長</span><span class="meta-val">${m.director}</span></div>
+    <div class="meta-item"><span class="meta-label">收錄案例數</span><span class="meta-val">${WUA_CASES.length}</span></div>
+  `;
+  const cl = m.changelog[0];
+  document.getElementById('header-changelog').innerHTML =
+    `<span class="cl-rm">- ${cl.remove}</span><br><span class="cl-add">+ ${cl.add}</span>`;
+}
+
+// ── render nav ──
+let currentFilter = 'all';
+function renderNav() {
+  const nav = document.getElementById('nav-inner');
+  const btns = [{ key: 'all', label: '全部案例' }];
+  Object.entries(WUA_CATEGORIES).forEach(([k, v]) => {
+    btns.push({ key: k, label: v.icon + ' ' + v.label });
+  });
+  nav.innerHTML = btns.map(b =>
+    `<button class="nav-btn${currentFilter === b.key ? ' active' : ''}" onclick="setFilter('${b.key}')">${b.label}</button>`
+  ).join('');
+}
+
+// ── render folders ──
+function renderFolders() {
+  const grid = document.getElementById('folder-grid');
+  grid.innerHTML = Object.entries(WUA_CATEGORIES).map(([k, v]) => {
+    const count = WUA_CASES.filter(c => c.category.includes(k)).length;
+    return `<div class="folder-card${currentFilter === k ? ' active' : ''}" onclick="setFilter('${k}')">
+      <div class="folder-icon">${v.icon}</div>
+      <div class="folder-name">${v.label}</div>
+      <div class="folder-desc">${v.desc}</div>
+      <span class="folder-count">${count} 件案例</span>
+    </div>`;
+  }).join('');
+}
+
+// ── render case card ──
+function renderCard(c) {
+  const imgPart = c.event_img
+    ? `<img src="${c.event_img}" class="case-img" alt="原始事件截圖" />`
+    : '';
+
+  // model 支援陣列（多視角）或字串（舊格式）
+  let modelPart = '';
+  if (c.model && Array.isArray(c.model) && c.model.length > 0) {
+    const views = c.model.filter(v => v.content && v.content.trim());
+    if (views.length === 1) {
+      modelPart = `<div class="field-row"><span class="field-label">${esc(views[0].title||'建模過程')}</span><div class="model-box">${esc(views[0].content)}</div></div>`;
+    } else if (views.length > 1) {
+      const tabs = views.map(v => `<div class="model-view"><div class="model-view-title">${esc(v.title)}</div><div class="model-box">${esc(v.content)}</div></div>`).join('');
+      modelPart = `<div class="field-row"><span class="field-label">建模過程</span><div class="model-views">${tabs}</div></div>`;
+    }
+  } else if (c.model && typeof c.model === 'string' && c.model.trim()) {
+    modelPart = `<div class="field-row"><span class="field-label">建模過程</span><div class="model-box">${esc(c.model)}</div></div>`;
+  }
+
+  const impactMax = c.impact_researcher > 5 ? 10 : 5;
+
+  return `<div class="case-card" id="card-${c.id}">
+    <div class="case-card-header" onclick="toggleCard('${c.id}')">
+      <span class="case-id">${c.id}</span>
+      <span class="case-name">${esc(c.name)}</span>
+      <div class="cat-badges">${catBadgesHTML(c.category)}</div>
+      ${tagHTML(c.tag)}
+      <span class="collapse-arrow">▼</span>
+    </div>
+    <div class="case-body">
+      ${fieldRow('首次發現', esc(c.date))}
+      <div class="field-row">
+        <span class="field-label">原始事件</span>
+        <div>
+          <div class="field-val">${esc(c.event_text)}</div>
+          ${imgPart}
+        </div>
+      </div>
+      ${fieldRow('異常現象', esc(c.anomaly))}
+      ${modelPart}
+      ${fieldRow('最終判定', `<strong>${esc(c.verdict)}</strong>`)}
+      <div class="field-row">
+        <span class="field-label">衝擊評估</span>
+        <div class="impact-row">
+          <div class="impact-item">
+            <div class="impact-label">世界觀衝擊值</div>
+            ${starsHTML(c.impact_world, 5, false)}
+          </div>
+          <div class="impact-item">
+            <div class="impact-label">研究員衝擊值</div>
+            ${starsHTML(c.impact_researcher, c.impact_researcher > 5 ? 10 : 5, true)}
+          </div>
+          ${c.rebuild_difficulty > 0 ? `<div class="impact-item">
+            <div class="impact-label">重建難度</div>
+            ${diffHTML(c.rebuild_difficulty)}
+          </div>` : ''}
+        </div>
+      </div>
+      ${c.note ? fieldRow('備註', esc(c.note)) : ''}
+    </div>
+    <div class="baseline-block">
+      <div class="baseline-title">基準線更新紀錄　BASELINE UPDATE LOG</div>
+      <div class="baseline-grid">
+        <div class="baseline-cell">
+          <div class="baseline-cell-label">更新前認知</div>
+          <div class="baseline-cell-val">${esc(c.before)}</div>
+        </div>
+        <div class="baseline-cell">
+          <div class="baseline-cell-label">更新後認知</div>
+          <div class="baseline-cell-val">${esc(c.after)}</div>
+        </div>
+      </div>
+      <div class="baseline-footer">
+        <div><span style="color:var(--ink-light)">更新幅度　</span><span class="delta">${esc(c.delta)}</span></div>
+        <div><span style="color:var(--ink-light)">後遺症　</span><span class="sequel">${esc(c.sequel)}</span></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── render cases ──
+function renderCases() {
+  const filtered = currentFilter === 'all'
+    ? WUA_CASES
+    : WUA_CASES.filter(c => c.category.includes(currentFilter));
+
+  const list = document.getElementById('cases-list');
+  const title = document.getElementById('section-title');
+  const count = document.getElementById('case-count');
+
+  if (currentFilter === 'all') {
+    title.textContent = '全部案例';
+  } else {
+    const cat = WUA_CATEGORIES[currentFilter];
+    title.textContent = cat.icon + ' ' + cat.label;
+  }
+  count.textContent = `${filtered.length} 件`;
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="empty">此分類尚無案例</div>';
+    return;
+  }
+  list.innerHTML = filtered.map(renderCard).join('');
+}
+
+function setFilter(key) {
+  currentFilter = key;
+  renderNav();
+  renderFolders();
+  renderCases();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function toggleCard(id) {
+  const card = document.getElementById('card-' + id);
+  card.classList.toggle('collapsed');
+}
+
+// ── init ──
+renderHeader();
+renderNav();
+renderFolders();
+renderCases();
+</script>
+</body>
+</html>
