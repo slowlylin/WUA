@@ -114,11 +114,20 @@ body{font-family:'Noto Serif TC',serif;background:#e8e0d0;color:var(--ink);min-h
       <div class="sec">原始事件</div>
       <div class="field"><label>事件描述</label><textarea id="f-event"></textarea></div>
       <div class="field"><label>截圖</label>
-        <div style="display:flex;align-items:center;gap:.75rem;font-size:13px">
+        <div style="display:flex;align-items:center;gap:1rem;font-size:13px;flex-wrap:wrap">
           <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer">
-            <input type="checkbox" id="f-img-none"> 無截圖
+            <input type="checkbox" id="f-img-none" onchange="updateImgHint();updatePreview()"> 無截圖
           </label>
-          <span id="img-path-hint" style="color:var(--ink-faint);font-size:12px">自動抓 img/WUA-XXX.jpg</span>
+          <label style="display:flex;align-items:center;gap:.4rem">
+            張數：<select id="f-img-count" onchange="updateImgHint();updatePreview()" style="font-size:13px;padding:2px 6px">
+              <option value="1">1 張</option>
+              <option value="2">2 張</option>
+              <option value="3">3 張</option>
+              <option value="4">4 張</option>
+              <option value="5">5 張</option>
+            </select>
+          </label>
+          <span id="img-path-hint" style="color:var(--ink-faint);font-size:12px"></span>
         </div>
       </div>
       <div class="field"><label>異常現象</label><textarea id="f-anomaly"></textarea></div>
@@ -317,12 +326,16 @@ document.querySelectorAll('#dots-difficulty .dot').forEach(d=>d.addEventListener
 function updateImgHint(){
   const id=document.getElementById('f-id').value.trim();
   const noImg=document.getElementById('f-img-none').checked;
+  const count=parseInt(document.getElementById('f-img-count').value)||1;
   const hint=document.getElementById('img-path-hint');
-  if(noImg){ hint.textContent='不顯示截圖'; hint.style.color='var(--ink-faint)'; }
-  else if(id){ hint.textContent='將顯示 img/'+id+'.jpg'; hint.style.color='var(--red)'; }
-  else{ hint.textContent='自動抓 img/WUA-XXX.jpg'; hint.style.color='var(--ink-faint)'; }
+  const sel=document.getElementById('f-img-count');
+  sel.disabled=noImg;
+  if(noImg){ hint.textContent='不顯示截圖'; hint.style.color='var(--ink-faint)'; return; }
+  if(!id){ hint.textContent='填入案例編號後顯示路徑'; hint.style.color='var(--ink-faint)'; return; }
+  if(count===1){ hint.textContent='→ img/'+id+'.jpg'; }
+  else{ hint.textContent='→ img/'+id+'-1.jpg … img/'+id+'-'+count+'.jpg'; }
+  hint.style.color='var(--red)';
 }
-document.getElementById('f-img-none').addEventListener('change',()=>{updateImgHint();updatePreview();});
 document.getElementById('f-id').addEventListener('input',updateImgHint);
 
 // ── live preview ──
@@ -399,7 +412,13 @@ function getForm(){
   return{
     id:g('f-id'),name:g('f-name'),tag:document.getElementById('f-tag').value,
     date:g('f-date'),category:selectedCats(),
-    event_text:g('f-event'),event_img:document.getElementById('f-img-none').checked?null:true,
+    event_text:g('f-event'),event_img:(()=>{
+      if(document.getElementById('f-img-none').checked) return null;
+      const id=g('f-id'); if(!id) return null;
+      const n=parseInt(document.getElementById('f-img-count').value)||1;
+      if(n===1) return ['img/'+id+'.jpg'];
+      return Array.from({length:n},(_,i)=>'img/'+id+'-'+(i+1)+'.jpg');
+    })(),
     anomaly:g('f-anomaly'),model:getModelViews(),verdict:g('f-verdict'),
     impact_world:starsWorld,impact_researcher:starsResearcher,rebuild_difficulty:difficulty,
     note:g('f-note'),before:g('f-before'),after:g('f-after'),delta:g('f-delta'),sequel:g('f-sequel'),
@@ -452,7 +471,10 @@ function loadCase(i){
   document.getElementById('researcher-val').textContent=starsResearcher;
   setDiff(c.rebuild_difficulty||0);
   document.querySelectorAll('#cat-checks input').forEach(inp=>inp.checked=(c.category||[]).includes(inp.value));
-  document.getElementById('f-img-none').checked=!c.event_img;
+  const hasImg=c.event_img&&(Array.isArray(c.event_img)?c.event_img.length>0:true);
+  document.getElementById('f-img-none').checked=!hasImg;
+  const cnt=Array.isArray(c.event_img)?c.event_img.length:1;
+  document.getElementById('f-img-count').value=Math.min(cnt,5);
   updateImgHint();
   renderCaseList(); updatePreview();
   window.scrollTo({top:0,behavior:'smooth'});
@@ -471,6 +493,7 @@ function clearForm(){
   document.getElementById('researcher-val').textContent='0';
   document.querySelectorAll('#cat-checks input').forEach(i=>i.checked=false);
   document.getElementById('f-img-none').checked=false;
+  document.getElementById('f-img-count').value='1';
   updateImgHint();
   editingIndex=-1; renderCaseList(); updatePreview();
 }
@@ -488,7 +511,7 @@ function renderOutput(){
     lines.push(`    tag: ${jsStr(c.tag)},`);
     lines.push(`    date: ${jsStr(c.date)},`);
     lines.push(`    event_text: ${jsStr(c.event_text)},`);
-    lines.push(`    event_img: ${c.event_img?jsStr('img/'+c.id+'.jpg'):'null'},`);
+    lines.push(`    event_img: ${Array.isArray(c.event_img)&&c.event_img.length?JSON.stringify(c.event_img):'null'},`);
     lines.push(`    anomaly: ${jsStr(c.anomaly)},`);
     // model: array
     if (Array.isArray(c.model) && c.model.length > 0) {

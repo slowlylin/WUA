@@ -181,7 +181,35 @@ body {
 .diff-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--cream-darker); margin-right: 2px; }
 .diff-dot.on { background: var(--ink); }
 
-.case-img { max-width: 100%; border-radius: 4px; margin-top: 6px; display: block; border: 0.5px solid var(--border); }
+/* ── THUMBNAILS ── */
+.thumb-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.thumb {
+  width: 80px; height: 80px; object-fit: cover;
+  border-radius: 4px; border: 0.5px solid var(--border);
+  cursor: pointer; transition: opacity .15s;
+}
+.thumb:hover { opacity: .8; }
+
+/* ── LIGHTBOX ── */
+.lb-overlay {
+  display: none; position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,.85); align-items: center; justify-content: center;
+}
+.lb-overlay.open { display: flex; }
+.lb-img { max-width: 90vw; max-height: 85vh; border-radius: 6px; display: block; }
+.lb-close {
+  position: fixed; top: 1.2rem; right: 1.5rem;
+  color: #fff; font-size: 28px; cursor: pointer; line-height: 1; user-select: none;
+}
+.lb-prev, .lb-next {
+  position: fixed; top: 50%; transform: translateY(-50%);
+  color: #fff; font-size: 32px; cursor: pointer; user-select: none;
+  padding: 0 1rem; opacity: .7; transition: opacity .15s;
+}
+.lb-prev:hover, .lb-next:hover { opacity: 1; }
+.lb-prev { left: 1rem; }
+.lb-next { right: 1rem; }
+.lb-counter { position: fixed; bottom: 1.2rem; left: 50%; transform: translateX(-50%); color: #fff; font-size: 12px; }
 
 /* ── BASELINE BLOCK ── */
 .baseline-block {
@@ -218,6 +246,15 @@ body {
 </style>
 </head>
 <body>
+
+<!-- lightbox -->
+<div class="lb-overlay" id="lb-overlay" onclick="lbClose()">
+  <span class="lb-close" onclick="lbClose()">✕</span>
+  <span class="lb-prev" onclick="lbStep(-1);event.stopPropagation()">‹</span>
+  <img class="lb-img" id="lb-img" src="" alt="">
+  <span class="lb-next" onclick="lbStep(1);event.stopPropagation()">›</span>
+  <span class="lb-counter" id="lb-counter"></span>
+</div>
 
 <header class="site-header">
   <div class="header-inner">
@@ -294,6 +331,20 @@ function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
 }
 
+// ── lightbox ──
+let lbImgs=[], lbIdx=0;
+function lbOpen(imgs,i){ lbImgs=imgs; lbIdx=i; lbShow(); document.getElementById('lb-overlay').classList.add('open'); }
+function lbClose(){ document.getElementById('lb-overlay').classList.remove('open'); }
+function lbStep(d){ lbIdx=(lbIdx+d+lbImgs.length)%lbImgs.length; lbShow(); }
+function lbShow(){
+  document.getElementById('lb-img').src=lbImgs[lbIdx];
+  const c=document.getElementById('lb-counter');
+  c.textContent=lbImgs.length>1?`${lbIdx+1} / ${lbImgs.length}`:'';
+  document.querySelector('.lb-prev').style.display=lbImgs.length>1?'':'none';
+  document.querySelector('.lb-next').style.display=lbImgs.length>1?'':'none';
+}
+document.addEventListener('keydown',e=>{ if(!document.getElementById('lb-overlay').classList.contains('open')) return; if(e.key==='Escape') lbClose(); if(e.key==='ArrowLeft') lbStep(-1); if(e.key==='ArrowRight') lbStep(1); });
+
 // ── render header ──
 function renderHeader() {
   const m = WUA_META;
@@ -337,8 +388,11 @@ function renderFolders() {
 
 // ── render case card ──
 function renderCard(c) {
-  const imgPart = c.event_img
-    ? `<img src="${c.event_img}" class="case-img" alt="原始事件截圖" />`
+  let imgs = [];
+  if (Array.isArray(c.event_img)) imgs = c.event_img;
+  else if (c.event_img) imgs = [c.event_img];
+  const imgPart = imgs.length
+    ? `<div class="thumb-row">${imgs.map((src,i)=>`<img class="thumb" src="${src}" alt="截圖${i+1}" onclick="lbOpen(${JSON.stringify(imgs)},${i})">`).join('')}</div>`
     : '';
 
   // model 支援陣列（多視角）或字串（舊格式）
