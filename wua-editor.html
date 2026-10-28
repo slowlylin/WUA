@@ -147,13 +147,13 @@ body{font-family:'Noto Serif TC',serif;background:#e8e0d0;color:var(--ink);min-h
     <div class="panel-body">
       <div class="field"><label>世界觀衝擊值</label>
         <div class="star-input" id="stars-world">
-          <span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5">★</span>
+          <span data-v="1" onclick="starsWorld=1;updateStarsUI('stars-world',1);updatePreview()">★</span><span data-v="2" onclick="starsWorld=2;updateStarsUI('stars-world',2);updatePreview()">★</span><span data-v="3" onclick="starsWorld=3;updateStarsUI('stars-world',3);updatePreview()">★</span><span data-v="4" onclick="starsWorld=4;updateStarsUI('stars-world',4);updatePreview()">★</span><span data-v="5" onclick="starsWorld=5;updateStarsUI('stars-world',5);updatePreview()">★</span>
         </div>
       </div>
       <div class="field"><label>研究員衝擊值（可超過5）</label>
         <div style="display:flex;align-items:center;gap:10px">
           <div class="star-input" id="stars-researcher">
-            <span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5">★</span><span data-v="6">★</span><span data-v="7">★</span><span data-v="8">★</span><span data-v="9">★</span><span data-v="10">★</span>
+            <span data-v="1" onclick="starsResearcher=1;updateStarsUI('stars-researcher',1);document.getElementById('researcher-val').textContent=1;updatePreview()">★</span><span data-v="2" onclick="starsResearcher=2;updateStarsUI('stars-researcher',2);document.getElementById('researcher-val').textContent=2;updatePreview()">★</span><span data-v="3" onclick="starsResearcher=3;updateStarsUI('stars-researcher',3);document.getElementById('researcher-val').textContent=3;updatePreview()">★</span><span data-v="4" onclick="starsResearcher=4;updateStarsUI('stars-researcher',4);document.getElementById('researcher-val').textContent=4;updatePreview()">★</span><span data-v="5" onclick="starsResearcher=5;updateStarsUI('stars-researcher',5);document.getElementById('researcher-val').textContent=5;updatePreview()">★</span><span data-v="6" onclick="starsResearcher=6;updateStarsUI('stars-researcher',6);document.getElementById('researcher-val').textContent=6;updatePreview()">★</span><span data-v="7" onclick="starsResearcher=7;updateStarsUI('stars-researcher',7);document.getElementById('researcher-val').textContent=7;updatePreview()">★</span><span data-v="8" onclick="starsResearcher=8;updateStarsUI('stars-researcher',8);document.getElementById('researcher-val').textContent=8;updatePreview()">★</span><span data-v="9" onclick="starsResearcher=9;updateStarsUI('stars-researcher',9);document.getElementById('researcher-val').textContent=9;updatePreview()">★</span><span data-v="10" onclick="starsResearcher=10;updateStarsUI('stars-researcher',10);document.getElementById('researcher-val').textContent=10;updatePreview()">★</span>
           </div>
           <span class="star-val" id="researcher-val">0</span>
         </div>
@@ -161,7 +161,7 @@ body{font-family:'Noto Serif TC',serif;background:#e8e0d0;color:var(--ink);min-h
       <div class="field"><label>重建難度</label>
         <div class="dots-row" id="dots-difficulty">
           <span style="font-size:10px;color:var(--ink-light);cursor:pointer" onclick="setDiff(0)">無</span>
-          <span class="dot" data-v="1"></span><span class="dot" data-v="2"></span><span class="dot" data-v="3"></span><span class="dot" data-v="4"></span><span class="dot" data-v="5"></span>
+          <span class="dot" data-v="1" onclick="setDiff(1)"></span><span class="dot" data-v="2" onclick="setDiff(2)"></span><span class="dot" data-v="3" onclick="setDiff(3)"></span><span class="dot" data-v="4" onclick="setDiff(4)"></span><span class="dot" data-v="5" onclick="setDiff(5)"></span>
         </div>
       </div>
       <div class="sec">基準線更新紀錄</div>
@@ -200,13 +200,7 @@ body{font-family:'Noto Serif TC',serif;background:#e8e0d0;color:var(--ink);min-h
   <div class="panel full">
     <div class="panel-header">匯入現有 wua-cases.js</div>
     <div class="panel-body">
-      <div class="field"><label>上傳檔案</label>
-        <div style="display:flex;align-items:center;gap:.5rem">
-          <input type="file" id="import-file" accept=".js,.txt" style="font-size:13px;flex:1"/>
-          <span id="import-placeholder" style="font-size:12px;color:var(--ink-faint)"></span>
-        </div>
-      </div>
-      <div class="field"><label>或直接貼上內容</label>
+      <div class="field"><label>貼上 wua-cases.js 內容</label>
         <textarea id="import-text" style="min-height:80px;font-family:monospace;font-size:11px" placeholder="貼上 wua-cases.js 完整內容..."></textarea>
       </div>
       <div class="btn-row">

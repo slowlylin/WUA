@@ -333,7 +333,7 @@ function esc(s) {
 
 // ── lightbox ──
 let lbImgs=[], lbIdx=0;
-function lbOpen(imgs,i){ lbImgs=imgs; lbIdx=i; lbShow(); document.getElementById('lb-overlay').classList.add('open'); }
+function lbOpen(el){ lbImgs=JSON.parse(el.dataset.imgs); lbIdx=parseInt(el.dataset.idx); lbShow(); document.getElementById('lb-overlay').classList.add('open'); }
 function lbClose(){ document.getElementById('lb-overlay').classList.remove('open'); }
 function lbStep(d){ lbIdx=(lbIdx+d+lbImgs.length)%lbImgs.length; lbShow(); }
 function lbShow(){
@@ -392,7 +392,7 @@ function renderCard(c) {
   if (Array.isArray(c.event_img)) imgs = c.event_img;
   else if (c.event_img) imgs = [c.event_img];
   const imgPart = imgs.length
-    ? `<div class="thumb-row">${imgs.map((src,i)=>`<img class="thumb" src="${src}" alt="截圖${i+1}" onclick="lbOpen(${JSON.stringify(imgs)},${i})">`).join('')}</div>`
+    ? `<div class="thumb-row">${imgs.map((src,i)=>`<img class="thumb" src="${src}" alt="截圖${i+1}" data-imgs='${JSON.stringify(imgs).replace(/'/g,"&#39;")}' data-idx="${i}" onclick="lbOpen(this)">`).join('')}</div>`
     : '';
 
   // model 支援陣列（多視角）或字串（舊格式）
