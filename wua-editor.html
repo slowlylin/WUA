@@ -116,10 +116,10 @@ body{font-family:'Noto Serif TC',serif;background:#e8e0d0;color:var(--ink);min-h
       <div class="field"><label>截圖</label>
         <div style="display:flex;align-items:center;gap:1rem;font-size:13px;flex-wrap:wrap">
           <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer">
-            <input type="checkbox" id="f-img-none" onchange="updateImgHint();updatePreview()"> 無截圖
+            <input type="checkbox" id="f-img-none" onchange="imgDirty=true;updateImgHint();updatePreview()"> 無截圖
           </label>
           <label style="display:flex;align-items:center;gap:.4rem">
-            張數：<select id="f-img-count" onchange="updateImgHint();updatePreview()" style="font-size:13px;padding:2px 6px">
+            張數：<select id="f-img-count" onchange="imgDirty=true;updateImgHint();updatePreview()" style="font-size:13px;padding:2px 6px">
               <option value="1">1 張</option>
               <option value="2">2 張</option>
               <option value="3">3 張</option>
@@ -200,7 +200,14 @@ body{font-family:'Noto Serif TC',serif;background:#e8e0d0;color:var(--ink);min-h
   <div class="panel full">
     <div class="panel-header">匯入現有 wua-cases.js</div>
     <div class="panel-body">
-      <div class="field"><label>貼上 wua-cases.js 內容</label>
+      <div class="field"><label>選擇 wua-cases.js 檔案</label>
+        <div class="img-zone">
+          <input type="file" id="import-file" accept=".js,text/javascript,text/plain">
+          <span>📂 點這裡選檔，或把檔案拖進來</span>
+          <span id="import-placeholder" style="color:var(--red)"></span>
+        </div>
+      </div>
+      <div class="field"><label>或貼上 wua-cases.js 內容</label>
         <textarea id="import-text" style="min-height:80px;font-family:monospace;font-size:11px" placeholder="貼上 wua-cases.js 完整內容..."></textarea>
       </div>
       <div class="btn-row">
@@ -240,6 +247,8 @@ let META = {
   director:"小麻糬", changelog:[{remove:"宣布勝利需要有人承認失敗",add:"部分人類可在對手未參賽的情況下宣布勝利"}]
 };
 let cases=[], editingIndex=-1, starsWorld=0, starsResearcher=0, difficulty=0;
+let modelViewsData = [];
+let imgDirty = false; // 只有動過截圖設定才重新產生路徑
 
 // ── init ──
 buildCatChecks();
@@ -326,6 +335,11 @@ function updateImgHint(){
   sel.disabled=noImg;
   if(noImg){ hint.textContent='不顯示截圖'; hint.style.color='var(--ink-faint)'; return; }
   if(!id){ hint.textContent='填入案例編號後顯示路徑'; hint.style.color='var(--ink-faint)'; return; }
+  const old = editingIndex >= 0 ? cases[editingIndex] : null;
+  if(old && !imgDirty && old.id===id && old.event_img){
+    const arr=Array.isArray(old.event_img)?old.event_img:[old.event_img];
+    hint.textContent='→ 保留原路徑：'+arr.join('、'); hint.style.color='var(--ink-mid)'; return;
+  }
   if(count===1){ hint.textContent='→ img/'+id+'.jpg'; }
   else{ hint.textContent='→ img/'+id+'-1.jpg … img/'+id+'-'+count+'.jpg'; }
   hint.style.color='var(--red)';
@@ -359,7 +373,8 @@ function tagHTML(tag){
 function updatePreview(){
   const id=g('f-id'),name=g('f-name');
   if(!id&&!name){document.getElementById('preview-body').innerHTML='<div class="empty-hint">填寫欄位後即時預覽</div>';return}
-  const imgPart=imgBase64?`<img src="${imgBase64}" class="pv-img" alt="截圖">`:'';
+  const pvImgs=getForm().event_img||[];
+  const imgPart=pvImgs.length?`<div style="font-size:11px;color:var(--ink-light);margin-top:6px;font-family:monospace">🖼 ${pvImgs.map(esc).join('　')}</div>`:'';
   const modelViews = getModelViews().filter(v=>v.content.trim());
   let modelPart = '';
   if (modelViews.length === 1) {
@@ -407,8 +422,15 @@ function getForm(){
     id:g('f-id'),name:g('f-name'),tag:document.getElementById('f-tag').value,
     date:g('f-date'),category:selectedCats(),
     event_text:g('f-event'),event_img:(()=>{
+      const id=g('f-id');
+      // 編輯既有案例、沒動截圖設定、編號也沒改 → 原封不動保留原本路徑
+      const old = editingIndex >= 0 ? cases[editingIndex] : null;
+      if (old && !imgDirty && old.id === id) {
+        if (!old.event_img) return null;
+        return Array.isArray(old.event_img) ? [...old.event_img] : [old.event_img];
+      }
       if(document.getElementById('f-img-none').checked) return null;
-      const id=g('f-id'); if(!id) return null;
+      if(!id) return null;
       const n=parseInt(document.getElementById('f-img-count').value)||1;
       if(n===1) return ['img/'+id+'.jpg'];
       return Array.from({length:n},(_,i)=>'img/'+id+'-'+(i+1)+'.jpg');
@@ -421,13 +443,15 @@ function getForm(){
 function saveCase(){
   const c=getForm();
   if(!c.id||!c.name){showToast('請填寫案例編號與名稱');return}
-  if(editingIndex>=0){cases[editingIndex]=c;}
-  else{cases.push(c);}
-  renderCaseList(); renderOutput();
-  showToast(editingIndex>=0?'已儲存修改':'案例已加入');
-  editingIndex=-1;
-  // keep form open for continued editing, just update list highlight
-  renderCaseList();
+  const dupIdx=cases.findIndex((x,i)=>x.id===c.id&&i!==editingIndex);
+  if(dupIdx>=0&&!confirm(`編號 ${c.id} 已經有另一筆案例「${cases[dupIdx].name}」，仍要儲存成重複編號嗎？`)) return;
+  const isEdit=editingIndex>=0;
+  if(isEdit){cases[editingIndex]=c;}
+  else{cases.push(c); editingIndex=cases.length-1;}
+  // 存完繼續停在這一筆，再按儲存是覆蓋，不會多出一筆
+  imgDirty=false;
+  updateImgHint(); renderCaseList(); renderOutput();
+  showToast(isEdit?'已儲存修改':'案例已加入');
 }
 function renderCaseList(){
   const el=document.getElementById('case-list');
@@ -468,7 +492,8 @@ function loadCase(i){
   const hasImg=c.event_img&&(Array.isArray(c.event_img)?c.event_img.length>0:true);
   document.getElementById('f-img-none').checked=!hasImg;
   const cnt=Array.isArray(c.event_img)?c.event_img.length:1;
-  document.getElementById('f-img-count').value=Math.min(cnt,5);
+  document.getElementById('f-img-count').value=Math.max(1,Math.min(cnt,5));
+  imgDirty=false;
   updateImgHint();
   renderCaseList(); updatePreview();
   window.scrollTo({top:0,behavior:'smooth'});
@@ -488,8 +513,8 @@ function clearForm(){
   document.querySelectorAll('#cat-checks input').forEach(i=>i.checked=false);
   document.getElementById('f-img-none').checked=false;
   document.getElementById('f-img-count').value='1';
-  updateImgHint();
-  editingIndex=-1; renderCaseList(); updatePreview();
+  editingIndex=-1; imgDirty=false;
+  updateImgHint(); renderCaseList(); updatePreview();
 }
 
 // ── output ──
@@ -562,7 +587,8 @@ document.getElementById('import-file').addEventListener('change',e=>{
   const r=new FileReader(); r.onload=ev=>{
     document.getElementById('import-text').value=ev.target.result;
     document.getElementById('import-placeholder').textContent='✅ '+file.name+' 已讀取';
-  }; r.readAsText(file);
+    importCases();
+  }; r.readAsText(file,'utf-8');
 });
 function importCases(){
   const text=document.getElementById('import-text').value.trim();
@@ -582,7 +608,9 @@ function importCases(){
     if(res.cat) CATEGORIES={...res.cat};
     if(res.meta) META={...META,...res.meta};
     buildCatChecks(); buildCatMgmt();
-    renderCaseList(); renderOutput();
+    clearForm(); renderOutput();
+    const ids=cases.map(c=>c.id), dups=[...new Set(ids.filter((x,i)=>ids.indexOf(x)!==i))];
+    if(dups.length) showToast('⚠️ 發現重複編號：'+dups.join('、'));
     document.getElementById('import-status').textContent=`✅ 成功載入 ${cases.length} 件案例`;
     showToast(`載入 ${cases.length} 件案例`);
   } catch(e){document.getElementById('import-status').textContent='❌ 解析失敗：'+e.message}
@@ -595,7 +623,6 @@ function clearImport(){
 }
 
 // ── model views ──
-let modelViewsData = [];
 
 function addModelView(title, content) {
   modelViewsData.push({title: title||'', content: content||''});
